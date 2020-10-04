@@ -20,15 +20,11 @@ class BaseAdminModule {
 
     }
 
-
-
-    install({App,Vue,Router,Store},{routePrefix}){
+    installRoutes(Router){
         const self = this;
-        this.init();
-
         function setRoute(r){
             r.name = `${self.getModuleName()}.${r.name}`;
-            r.url = `/${routePrefix}/${self.getModuleName()}/${r.url}`;
+            r.path = `${self.getModuleName()}/${r.url}`;
             if(r.children)
             {
                 r.children.forEach(setRoute);
@@ -39,16 +35,34 @@ class BaseAdminModule {
         let routeData = routes.find(r => r.name === "root");
         routeData.children = [
             ...routeData.children,
-            ...self.getRoutes().map(setRoute)
+            {
+                name: self.getModuleName(),
+                path: self.getModuleName(),
+                children: [
+                    ...self.getRoutes().map(setRoute)
+                ]
+            }
         ];
         Router.addRoutes([routeData]);
+    }
 
-        self.getMenuItems().forEach(m => {
+    installMenuItems(Store,routePrefix){
+        const self = this;
+        this.getMenuItems().forEach(m => {
             m.id = m.id === 0 ? 0 : (self.getModuleName() + '_' + m.id);
             m.url = `/${routePrefix}/${self.getModuleName()}/${m.url}`;
             m.parentId = m.parentId === 0 ? 0 : (self.getModuleName() + '_' + m.parentId);
             Store.dispatch('pushMenuItem', m);
         });
+    }
+
+    install({App,Vue,Router,Store},{routePrefix}){
+
+        this.init();
+
+        this.installRoutes(Router);
+        this.installMenuItems(Store,routePrefix)
+
     }
 }
 
