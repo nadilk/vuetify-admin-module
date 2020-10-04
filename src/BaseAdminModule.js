@@ -35,9 +35,13 @@ class BaseAdminModule {
             }
             return r;
         }
-        Router.addRoutes([
-            self.getRoutes().map(setRoute)
-        ]);
+        let { routes } = Router.options;
+        let routeData = routes.find(r => r.name === "root");
+        routeData.children = [
+            ...routeData.children,
+            ...self.getRoutes().map(setRoute)
+        ];
+        Router.addRoutes([routeData]);
 
         self.getMenuItems().forEach(m => {
             m.id = m.id === 0 ? 0 : (self.getModuleName() + '_' + m.id);
